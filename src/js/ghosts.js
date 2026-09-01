@@ -38,16 +38,16 @@ function ghostDecide( game, g ) {
     return;
   }
 
-  if ( g.kind === 'hunter' ) {
-    g.dir = chooseToward( game, g, { x: Math.round( p.x ), y: Math.round( p.y ) } );
-  } else {
-    const grid = game.grid;
-    const options = Object.keys( DIRS ).filter(
-      ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
-    );
-    const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
-    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+  let target = { x: px, y: py };
+
+  if ( g.kind === 'pinky' ) {
+    const d = DIRS[ p.dir ] || { x: 0, y: 0 };
+    target = { x: px + d.x * 4, y: py + d.y * 4 };
   }
+
+  g.dir = chooseToward( game, g, target );
 }
 
 window.ghostDecide = ghostDecide;
