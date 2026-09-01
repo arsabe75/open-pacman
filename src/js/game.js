@@ -13,6 +13,13 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+const GHOST_RELEASE_DELAYS = {
+  blinky: 0,
+  pinky: 180,
+  inky: 360,
+  clyde: 540,
+};
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -28,6 +35,7 @@ function createGame() {
     score: 0,
     lives: 3,
     dotsRemaining: dots,
+    frame: 0,
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -42,6 +50,7 @@ function createGame() {
       dir: 'up',
       speed: GHOST_SPEED,
       kind: g.kind,
+      releaseAt: GHOST_RELEASE_DELAYS[ g.kind ] || 0,
     } ) ),
   };
 }
@@ -111,37 +120,12 @@ function movePacman( game ) {
 }
 
 function decideGhost( game, g ) {
-  const grid = game.grid;
-  const p = game.pacman;
-
-  const options = Object.keys( DIRS ).filter(
-    ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
-  );
-  // Sin salida (callejon): permitir el giro de 180.
-  const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
-
-  if ( g.kind === 'hunter' ) {
-    const px = Math.round( p.x );
-    const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
-    }
-    g.dir = best;
-  } else {
-    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
-  }
+  window.ghostDecide( game, g );
 }
 
 function moveGhost( game, g ) {
+  if ( game.frame < g.releaseAt ) return;
+
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
@@ -168,6 +152,7 @@ function resetPositions( game ) {
     g.x = GHOST_STARTS[ i ].x;
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
+    g.releaseAt = game.frame + ( GHOST_RELEASE_DELAYS[ g.kind ] || 0 );
   } );
 }
 
@@ -176,6 +161,7 @@ function collides( a, b ) {
 }
 
 function update( game ) {
+  game.frame++;
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
