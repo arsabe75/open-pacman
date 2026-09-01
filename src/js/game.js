@@ -124,6 +124,8 @@ function decideGhost( game, g ) {
 }
 
 function moveGhost( game, g ) {
+  if ( game.frame < g.releaseAt ) return;
+
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
@@ -150,6 +152,7 @@ function resetPositions( game ) {
     g.x = GHOST_STARTS[ i ].x;
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
+    g.releaseAt = game.frame + ( GHOST_RELEASE_DELAYS[ g.kind ] || 0 );
   } );
 }
 
@@ -158,6 +161,7 @@ function collides( a, b ) {
 }
 
 function update( game ) {
+  game.frame++;
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
