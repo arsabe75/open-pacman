@@ -3,6 +3,8 @@
 
 const PEN = { x0: 11, x1: 16, y0: 13, y1: 15 };
 const DOOR_TARGET = { x: 13, y: 12 };
+const CLYDE_CORNER = { x: 1, y: 29 };
+const CLYDE_RADIUS = 8;
 
 function inPen( g ) {
   return g.x >= PEN.x0 && g.x <= PEN.x1 && g.y >= PEN.y0 && g.y <= PEN.y1;
@@ -45,6 +47,22 @@ function ghostDecide( game, g ) {
   if ( g.kind === 'pinky' ) {
     const d = DIRS[ p.dir ] || { x: 0, y: 0 };
     target = { x: px + d.x * 4, y: py + d.y * 4 };
+  } else if ( g.kind === 'inky' ) {
+    const d = DIRS[ p.dir ] || { x: 0, y: 0 };
+    const pivot = { x: px + d.x * 2, y: py + d.y * 2 };
+    const blinky = game.ghosts.find( ( gh ) => gh.kind === 'blinky' );
+    if ( blinky ) {
+      target = {
+        x: 2 * pivot.x - Math.round( blinky.x ),
+        y: 2 * pivot.y - Math.round( blinky.y ),
+      };
+    }
+  } else if ( g.kind === 'clyde' ) {
+    const dx = g.x - px;
+    const dy = g.y - py;
+    if ( Math.sqrt( dx * dx + dy * dy ) < CLYDE_RADIUS ) {
+      target = CLYDE_CORNER;
+    }
   }
 
   g.dir = chooseToward( game, g, target );
