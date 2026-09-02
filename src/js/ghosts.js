@@ -38,11 +38,25 @@ function chooseToward( game, g, target ) {
   return best;
 }
 
+function chooseRandom( game, g ) {
+  const grid = game.grid;
+  const options = Object.keys( DIRS ).filter(
+    ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
+  );
+  const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
+  return choices[ Math.floor( Math.random() * choices.length ) ];
+}
+
 function ghostDecide( game, g ) {
   const p = game.pacman;
 
   if ( needsExit( g ) ) {
     g.dir = chooseToward( game, g, DOOR_TARGET );
+    return;
+  }
+
+  if ( g.frightened ) {
+    g.dir = chooseRandom( game, g );
     return;
   }
 
@@ -75,6 +89,7 @@ function ghostDecide( game, g ) {
 }
 
 window.ghostDecide = ghostDecide;
+window.chooseRandom = chooseRandom;
 window.chooseToward = chooseToward;
 window.inPen = inPen;
 window.needsExit = needsExit;
