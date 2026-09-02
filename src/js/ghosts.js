@@ -2,12 +2,18 @@
 // Decision de direccion de los fantasmas.
 
 const PEN = { x0: 11, x1: 16, y0: 13, y1: 15 };
-const DOOR_TARGET = { x: 13, y: 12 };
+const DOOR = { x0: 13, x1: 14, y: 12 };
+const DOOR_TARGET = { x: 13, y: 11 };
 const CLYDE_CORNER = { x: 1, y: 29 };
 const CLYDE_RADIUS = 8;
 
 function inPen( g ) {
   return g.x >= PEN.x0 && g.x <= PEN.x1 && g.y >= PEN.y0 && g.y <= PEN.y1;
+}
+
+function needsExit( g ) {
+  if ( inPen( g ) ) return true;
+  return g.y === DOOR.y && g.x >= DOOR.x0 && g.x <= DOOR.x1;
 }
 
 function chooseToward( game, g, target ) {
@@ -35,7 +41,7 @@ function chooseToward( game, g, target ) {
 function ghostDecide( game, g ) {
   const p = game.pacman;
 
-  if ( inPen( g ) ) {
+  if ( needsExit( g ) ) {
     g.dir = chooseToward( game, g, DOOR_TARGET );
     return;
   }
@@ -71,5 +77,7 @@ function ghostDecide( game, g ) {
 window.ghostDecide = ghostDecide;
 window.chooseToward = chooseToward;
 window.inPen = inPen;
+window.needsExit = needsExit;
 window.PEN = PEN;
+window.DOOR = DOOR;
 window.DOOR_TARGET = DOOR_TARGET;
