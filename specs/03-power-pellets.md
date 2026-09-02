@@ -1,6 +1,6 @@
 # SPEC 03 — Power pellets y comer fantasmas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 02
 > **Fecha:** 2026-09-02
 > **Objetivo:** Añadir 4 power pellets al laberinto que, al comerlos, asustan a los fantasmas durante 6 segundos y permiten a Pac-Man comerlos por puntos.
