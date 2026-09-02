@@ -182,8 +182,12 @@ function resetPositions( game ) {
     g.x = GHOST_STARTS[ i ].x;
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
+    g.speed = GHOST_SPEED;
+    g.frightened = false;
     g.releaseAt = game.frame + ( GHOST_RELEASE_DELAYS[ g.kind ] || 0 );
   } );
+  game.frightenedUntil = 0;
+  game.ghostChain = 0;
 }
 
 function collides( a, b ) {
@@ -196,15 +200,33 @@ function update( game ) {
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
+  let hitNormal = false;
   for ( const g of game.ghosts ) {
-    if ( collides( game.pacman, g ) ) {
-      game.lives--;
-      if ( game.lives <= 0 ) {
-        game.state = 'lost';
-        return;
-      }
-      resetPositions( game );
+    if ( collides( game.pacman, g ) && !g.frightened ) {
+      hitNormal = true;
       break;
+    }
+  }
+
+  if ( hitNormal ) {
+    game.lives--;
+    if ( game.lives <= 0 ) {
+      game.state = 'lost';
+      return;
+    }
+    resetPositions( game );
+  } else {
+    for ( const g of game.ghosts ) {
+      if ( collides( game.pacman, g ) && g.frightened ) {
+        game.score += GHOST_CHAIN[ Math.min( game.ghostChain, GHOST_CHAIN.length - 1 ) ];
+        game.ghostChain = Math.min( game.ghostChain + 1, GHOST_CHAIN.length - 1 );
+        g.frightened = false;
+        g.speed = GHOST_SPEED;
+        const start = GHOST_STARTS.find( ( s ) => s.kind === g.kind );
+        g.x = start.x;
+        g.y = start.y;
+        g.dir = 'up';
+      }
     }
   }
 
