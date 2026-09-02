@@ -20,6 +20,11 @@ const GHOST_RELEASE_DELAYS = {
   clyde: 540,
 };
 
+const FRIGHTENED_DURATION = 360; // frames (~6 s a 60 fps)
+const FRIGHTENED_SPEED = 0.05;   // 1/20 celda/frame -> alinea cada 20 frames
+const PELLET_SCORE = 50;
+const GHOST_CHAIN = [ 200, 400, 800, 1600 ];
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -36,6 +41,8 @@ function createGame() {
     lives: 3,
     dotsRemaining: dots,
     frame: 0,
+    frightenedUntil: 0,
+    ghostChain: 0,
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -51,6 +58,7 @@ function createGame() {
       speed: GHOST_SPEED,
       kind: g.kind,
       releaseAt: GHOST_RELEASE_DELAYS[ g.kind ] || 0,
+      frightened: false,
     } ) ),
   };
 }
@@ -107,8 +115,9 @@ function movePacman( game ) {
     const cell = grid[ p.y ][ p.x ];
     if ( cell === 2 || cell === 4 ) {
       grid[ p.y ][ p.x ] = 0;
-      game.score += cell === 4 ? 50 : 10;
+      game.score += cell === 4 ? PELLET_SCORE : 10;
       game.dotsRemaining--;
+      if ( cell === 4 ) frightenGhosts( game );
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -118,6 +127,26 @@ function movePacman( game ) {
   p.x += d.x * p.speed;
   p.y += d.y * p.speed;
   wrapTunnel( p, width );
+}
+
+function frightenGhosts( game ) {
+  game.frightenedUntil = game.frame + FRIGHTENED_DURATION;
+  game.ghostChain = 0;
+  game.ghosts.forEach( ( g ) => {
+    g.frightened = true;
+    g.dir = OPPOSITE[ g.dir ];
+    g.speed = FRIGHTENED_SPEED;
+  } );
+}
+
+function expireFrightened( game ) {
+  if ( game.frightenedUntil && game.frame >= game.frightenedUntil ) {
+    game.frightenedUntil = 0;
+    game.ghosts.forEach( ( g ) => {
+      g.frightened = false;
+      g.speed = GHOST_SPEED;
+    } );
+  }
 }
 
 function decideGhost( game, g ) {
@@ -163,6 +192,7 @@ function collides( a, b ) {
 
 function update( game ) {
   game.frame++;
+  expireFrightened( game );
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
